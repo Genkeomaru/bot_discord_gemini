@@ -1,10 +1,14 @@
 import discord
 import os
+import logging
 from dotenv import load_dotenv
 from discord.ext import commands
 from google import genai
 from google.genai import types
-from keep_alive import keep_alive
+
+# Configura o logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Carrega as variáveis de ambiente
 load_dotenv()
@@ -37,7 +41,7 @@ async def buscar_historico_canal(canal, bot_id, limit=10):
     
     async for message in canal.history(limit=limit, oldest_first=False):
         role = "model" if message.author.id == bot_id else "user"
-        conteudo = message.content.replace(f'<@{bot_id}>', '').strip()
+        conteudo = message.content.replace(f'<@{bot_id}>', '').replace(f'<@!{bot_id}>', '').strip()
         
         if conteudo: 
             # A nova biblioteca exige a montagem exata deste objeto 'Content'
@@ -53,7 +57,7 @@ async def buscar_historico_canal(canal, bot_id, limit=10):
 
 @bot.event
 async def on_ready():
-    print(f"O {bot.user.name} está online, com a Dívida Técnica paga e motor novo!")
+    logger.info(f"O {bot.user.name} está online, pronto para uso e com a Dívida Técnica paga!")
 
 @bot.event
 async def on_message(message):
@@ -91,12 +95,10 @@ async def on_message(message):
                 await message.reply(pedaco)
             
         except Exception as e:
-            await message.reply(f"Encontrei um erro ao processar: {e}")
+            logger.error(f"Erro ao processar mensagem no canal {message.channel.name} (ID: {message.channel.id}): {e}", exc_info=True)
+            await message.reply("Desculpe, encontrei um erro interno ao tentar processar sua mensagem. Tente novamente mais tarde.")
 
     await bot.process_commands(message)
-
-# Inicia o servidor web em segundo plano para o Render não matar o bot
-keep_alive()
 
 # Inicia o bot
 bot.run(DISCORD_BOT_TOKEN)
