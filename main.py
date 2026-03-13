@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from discord.ext import commands
 from google import genai
 from google.genai import types
-from keep_alive import keep_alive
 
 # Carrega as variáveis de ambiente
 load_dotenv()
@@ -94,9 +93,5 @@ async def on_message(message):
             await message.reply(f"Encontrei um erro ao processar: {e}")
 
     await bot.process_commands(message)
-
-# Inicia o servidor web em segundo plano para o Render não matar o bot
-keep_alive()
-
 # Inicia o bot
 bot.run(DISCORD_BOT_TOKEN)
