@@ -145,13 +145,25 @@ async def on_message(message):
             instrucao_base_ativa = personalidades[personalidade_atual]
 
             # A nova forma de chamar a geração de texto
-            resposta = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=conteudo_chat,
-                config=types.GenerateContentConfig(
-                    system_instruction=instrucao_base_ativa
+            try:
+                # Tenta primeiro com o modelo principal (gemini-2.5-flash)
+                resposta = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=conteudo_chat,
+                    config=types.GenerateContentConfig(
+                        system_instruction=instrucao_base_ativa
+                    )
                 )
-            )
+            except Exception as error_25:
+                print(f"⚠️ Erro no gemini-2.5-flash (Limite/Cota esgotada?): {error_25}. Alternando para gemini-1.5-flash...")
+                # Sistema de Fallback: Se o 2.5 falhar, tenta o 1.5-flash
+                resposta = client.models.generate_content(
+                    model='gemini-1.5-flash',
+                    contents=conteudo_chat,
+                    config=types.GenerateContentConfig(
+                        system_instruction=instrucao_base_ativa
+                    )
+                )
             
             texto_resposta = resposta.text
             limite_discord = 1900 # Usamos 1900 como margem de segurança
