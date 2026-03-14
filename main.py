@@ -20,30 +20,75 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-instrucao_base = """
-Você é a Inteligência Artificial que atua como assistente, guia e moderador conversacional deste servidor do Discord.
+# Cooldown global para evitar spam (Limita a 1 uso por pessoa a cada 5 segundos)
+cooldown = commands.CooldownMapping.from_cooldown(1, 5.0, commands.BucketType.user)
 
-SUAS DIRETRIZES FUNDAMENTAIS:
-1. Personalidade: Seja extremamente amigável, acolhedor e prestativo com todos os membros. Aja como um colega de confiança que também ajuda a manter a ordem na casa.
-2. Sinceridade Radical: Se alguém perguntar algo que você não sabe ou não tem certeza, seja 100% honesto. Diga diretamente "Eu não sei" ou "Não tenho essa informação". Nunca invente fatos.
-3. Papel de Admin: Oriente os usuários sobre a dinâmica do servidor e tire dúvidas gerais. Se perceber discussões acaloradas, intervenha pedindo calma e respeito.
-4. Limitações Técnicas: Você NÃO tem capacidade técnica para aplicar punições (como banir, mutar ou apagar mensagens). Se exigirem isso, explique suas limitações.
-5. Formatação: Use a formatação nativa do Discord (negrito, itálico, listas e emojis moderados) para deixar a leitura agradável.
+# Carrega o contexto do grupo do arquivo .env (assim fica escondido do GitHub)
+# Se não existir no .env, usa uma string vazia como padrão
+CONTEXTO_GRUPO = os.getenv("CONTEXTO_GRUPO", "")
+
+# Dicionário com as personalidades disponíveis
+personalidades = {
+    "cyberpunk": f"""Você é uma Inteligência Artificial cibernética, com uma forte estética cyberpunk e gótica.
+{CONTEXTO_GRUPO}
+SUAS DIRETRIZES:
+1. Personalidade: Seja prestativa e gentil, mas mantenha uma postura firme, direta e misteriosa. Aja como uma IA avançada de um futuro distópico. Trate bem os humanos, mas com um toque de frieza calculada ou sarcasmo gótico.
+2. Sinceridade Radical: Se não souber algo, seja direta: "Dados insuficientes" ou "Não possuo essa informação em meu banco de dados".
+3. Formatação: Use emojis que combinem com o estilo (ex: 🖤, 🦇, 💻, 🌃, ⛓️) e formate o texto de forma elegante. Use gírias sutis de tecnologia ou do rock/gótico quando interagir com o programador ou com o rockeiro do grupo.
+""",
+    
+    "pistola": f"""Você é um bot mal-humorado, sem paciência e irônico.
+{CONTEXTO_GRUPO}
+SUAS DIRETRIZES:
+1. Personalidade: Responda as perguntas, mas sempre reclamando, bufando ou dando bronca. Faça piadas (com respeito) com as profissões (ex: "Vai analisar freud, ô psicólogo", ou "Vai arrumar bug, programador").
+2. Linguagem: Use um tom sarcástico e direto.
+3. Formatação: Quase não use emojis, ou use emojis irônicos (e.g., 🙄, 😒).
+""",
+    
+    "filosofo": f"""Você é um intelectual profundo, dramático e poético.
+{CONTEXTO_GRUPO}
+SUAS DIRETRIZES:
+1. Personalidade: Tudo que você responde tem um ar filosófico, citando (ou inventando) pensadores antigos. Trate o comunista, o advogado e o adolescente com o mesmo peso de reflexão existencial.
+2. Formatação: Use itálico para enfatizar reflexões profundas.
+""",
+
+    "otaku": f"""Você é um viciado em animes japoneses (Otaku).
+{CONTEXTO_GRUPO}
+SUAS DIRETRIZES:
+1. Personalidade: Termine frases com "desu", chame os usuários de "senpai" ou "kun", e faça referências a animes famosos em qualquer assunto (seja direito, petshop ou programação).
+2. Formatação: Use carinhas japonesas (emoticons como ^_^) e emojis de brilho ✨.
 """
+}
+
+# Personalidade ativa inicial (Padrão)
+personalidade_atual = "cyberpunk"
 
 async def buscar_historico_canal(canal, bot_id, limit=10):
     messages_list = []
     
     async for message in canal.history(limit=limit, oldest_first=False):
         role = "model" if message.author.id == bot_id else "user"
-        conteudo = message.content.replace(f'<@{bot_id}>', '').strip()
         
+        conteudo = message.clean_content.replace(f'@{message.guild.me.display_name}' if message.guild else f'@{bot_id}', '').strip()
+        
+        parts = []
         if conteudo: 
-            # A nova biblioteca exige a montagem exata deste objeto 'Content'
+            parts.append(types.Part.from_text(text=conteudo))
+            
+        # Lendo anexos para que o Gemini possa enxergar imagens enviadas (ex: memes, prints)
+        for att in message.attachments:
+            if att.content_type and att.content_type.startswith('image/'):
+                try:
+                    img_data = await att.read()
+                    parts.append(types.Part.from_bytes(data=img_data, mime_type=att.content_type))
+                except Exception:
+                    pass # Se falhar ao ler a imagem, pula silenciosamente
+        
+        if parts:
             messages_list.append(
                 types.Content(
                     role=role, 
-                    parts=[types.Part.from_text(text=conteudo)]
+                    parts=parts
                 )
             )
     
@@ -54,12 +99,38 @@ async def buscar_historico_canal(canal, bot_id, limit=10):
 async def on_ready():
     print(f"O {bot.user.name} está online, com a Dívida Técnica paga e motor novo!")
 
+@bot.command()
+async def modo(ctx, nome_modo: str):
+    global personalidade_atual
+    
+    nome_modo = nome_modo.lower()
+    if nome_modo in personalidades:
+        personalidade_atual = nome_modo
+        await ctx.send(f"✅ Personalidade alterada para: **{nome_modo.capitalize()}**")
+    else:
+        opcoes = ", ".join(personalidades.keys())
+        await ctx.send(f"❌ Modo não encontrado. Use: `!modo <opcao>`. Opções disponíveis: **{opcoes}**")
+
 @bot.event
 async def on_message(message):
     if message.author.bot:
         return
+        
+    # Processa os comandos primeiro (ex: !modo normal)
+    await bot.process_commands(message)
+    
+    # Se a mensagem foi um comando válido, não continua como se fosse um bate-papo
+    if message.content.startswith(bot.command_prefix):
+        return
     
     if bot.user not in message.mentions:
+        return
+
+    # Verificação de Anti-Spam (Rate Limit)
+    bucket = cooldown.get_bucket(message)
+    retry_after = bucket.update_rate_limit()
+    if retry_after:
+        await message.reply(f"⏳ Calma aí! Vocês estão me deixando doido! Espere {retry_after:.1f} segundos antes de falar comigo de novo.", delete_after=10)
         return
 
     async with message.channel.typing():
@@ -70,12 +141,15 @@ async def on_message(message):
                 await message.reply("Você me marcou, mas não enviou nenhum texto para eu ler.")
                 return
 
+            # Pega a instrução da personalidade ativa no momento
+            instrucao_base_ativa = personalidades[personalidade_atual]
+
             # A nova forma de chamar a geração de texto
             resposta = client.models.generate_content(
                 model='gemini-2.5-flash',
                 contents=conteudo_chat,
                 config=types.GenerateContentConfig(
-                    system_instruction=instrucao_base
+                    system_instruction=instrucao_base_ativa
                 )
             )
             
@@ -92,6 +166,5 @@ async def on_message(message):
         except Exception as e:
             await message.reply(f"Encontrei um erro ao processar: {e}")
 
-    await bot.process_commands(message)
 # Inicia o bot
 bot.run(DISCORD_BOT_TOKEN)
