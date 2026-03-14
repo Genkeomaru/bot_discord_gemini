@@ -1,18 +1,32 @@
-Política de Privacidade - Mahaya Bot
-Última atualização: 13 de Março de 2026.
+# 🔒 Política de Privacidade - Mahaya Bot
 
-A privacidade dos usuários é prioridade no desenvolvimento do Mahaya. Esta política descreve como os dados são tratados:
+> **Última atualização:** 13 de Março de 2026
 
-Dados Coletados:
+A privacidade dos usuários é prioridade no desenvolvimento do **Mahaya**. Esta política descreve de forma transparente como os seus dados são tratados durante o uso do bot.
 
-Mensagens: O bot lê apenas as mensagens em que é mencionado ou comandos diretos. O conteúdo é enviado à API de IA para gerar a resposta.
+---
 
-Metadados: Podemos processar IDs de usuário, IDs de servidor e nomes de canais para garantir o funcionamento técnico e aplicar limites de uso (rate limiting).
+## 📥 Dados Coletados
 
-Uso dos Dados: * As mensagens não são armazenadas permanentemente pelo desenvolvedor do Mahaya após o processamento da resposta.
+- **Mensagens:** O bot processa *apenas* as mensagens em que é explicitamente mencionado ou quando comandos diretos são utilizados. O conteúdo dessas mensagens é enviado à API de Inteligência Artificial para gerar a resposta adequada.
+- **Metadados:** Podemos processar e armazenar temporariamente IDs de usuário, IDs de servidor e nomes de canais. Isso é essencial para garantir o funcionamento técnico do bot e aplicar limites de uso (rate limiting), evitando abusos do sistema.
 
-Os dados não são vendidos a terceiros nem utilizados para fins publicitários.
+## ⚙️ Uso dos Dados
 
-Processamento Externo: O conteúdo das mensagens é processado por APIs de terceiros (como Google Gemini ou similar). Recomendamos não compartilhar informações sensíveis, senhas ou dados pessoais nas interações.
+- 🗑️ **Sem armazenamento persistente:** As mensagens dos usuários **não** são armazenadas permanentemente pelo desenvolvedor do Mahaya após o processamento da resposta.
+- 🚫 **Prioridade na privacidade:** Os dados não são vendidos a terceiros nem utilizados para fins publicitários sob nenhuma circunstância.
 
-Seus Direitos: Como não armazenamos logs persistentes de conversas vinculadas a usuários, a "exclusão de dados" ocorre automaticamente com o encerramento da sessão de processamento.
+## 🌐 Processamento Externo
+
+O conteúdo das mensagens é processado por APIs de terceiros (como *Google Gemini* ou provedores similares de IA). 
+
+> ⚠️ **Recomendação de Segurança:** Recomendamos fortemente que você **não** compartilhe informações sensíveis, senhas, dados bancários ou informações de identificação pessoal (PII) durante suas interações com o Mahaya.
+
+## ⚖️ Seus Direitos
+
+Como a nossa infraestrutura não armazena logs persistentes ou históricos de conversas vinculadas aos usuários, a "exclusão de dados" ocorre de maneira **automática** e imediata assim que a sessão de processamento da resposta é encerrada.
+
+---
+<br>
+
+[← Voltar para o Início](./index.md)
