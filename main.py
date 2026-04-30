@@ -115,6 +115,7 @@ SUAS DIRETRIZES:
 
 personalidade_atual = "cyberpunk"
 ia_em_uso = "nenhuma"
+processed_messages = set()
 
 
 def converter_historico_para_texto(conteudo_chat: list) -> list:
@@ -461,6 +462,12 @@ async def on_message(message):
             delete_after=10
         )
         return
+
+    if message.id in processed_messages:
+        return
+    processed_messages.add(message.id)
+    if len(processed_messages) > 1000:
+        processed_messages.clear()
 
     async with message.channel.typing():
         try:
