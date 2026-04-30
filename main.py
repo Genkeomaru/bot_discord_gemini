@@ -234,7 +234,7 @@ async def gerar_resposta(instrucao: str, conteudo_chat: list) -> str:
     raise Exception("Todos os provedores de IA falharam ou não estão configurados.")
 
 
-async def buscar_historico_canal(canal, bot_id, limit=10):
+async def buscar_historico_canal(canal, bot_id, limit=6):
     messages_list = []
 
     async for message in canal.history(limit=limit, oldest_first=False):
