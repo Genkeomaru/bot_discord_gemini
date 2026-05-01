@@ -16,8 +16,11 @@ if not DISCORD_BOT_TOKEN:
     raise RuntimeError("DISCORD_BOT_TOKEN não configurado no .env")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_API_KEY_2 = os.getenv("GEMINI_API_KEY_2")
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+gemini_clients = [genai.Client(api_key=GEMINI_API_KEY)]
+if GEMINI_API_KEY_2:
+    gemini_clients.append(genai.Client(api_key=GEMINI_API_KEY_2))
 
 openai_client = None
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -145,46 +148,49 @@ async def gerar_resposta(instrucao: str, conteudo_chat: list) -> str:
     global ia_em_uso
 
     # 1. Gemini 2.5 Flash
-    try:
-        config = types.GenerateContentConfig(system_instruction=instrucao)
-        resposta = await asyncio.to_thread(
-            client.models.generate_content,
-            model='gemini-2.5-flash',
-            contents=conteudo_chat,
-            config=config
-        )
-        ia_em_uso = "gemini-2.5-flash"
-        return resposta.text
-    except Exception as e:
-        print(f"⚠️ gemini-2.5-flash falhou: {e}")
+    for idx, gc in enumerate(gemini_clients):
+        try:
+            config = types.GenerateContentConfig(system_instruction=instrucao)
+            resposta = await asyncio.to_thread(
+                gc.models.generate_content,
+                model='gemini-2.5-flash',
+                contents=conteudo_chat,
+                config=config
+            )
+            ia_em_uso = f"gemini-2.5-flash (key {idx + 1})"
+            return resposta.text
+        except Exception as e:
+            print(f"⚠️ gemini-2.5-flash key {idx + 1} falhou: {e}")
 
     # 2. Gemini 2.0 Flash
-    try:
-        config = types.GenerateContentConfig(system_instruction=instrucao)
-        resposta = await asyncio.to_thread(
-            client.models.generate_content,
-            model='gemini-2.0-flash',
-            contents=conteudo_chat,
-            config=config
-        )
-        ia_em_uso = "gemini-2.0-flash"
-        return resposta.text
-    except Exception as e:
-        print(f"⚠️ gemini-2.0-flash falhou: {e}")
+    for idx, gc in enumerate(gemini_clients):
+        try:
+            config = types.GenerateContentConfig(system_instruction=instrucao)
+            resposta = await asyncio.to_thread(
+                gc.models.generate_content,
+                model='gemini-2.0-flash',
+                contents=conteudo_chat,
+                config=config
+            )
+            ia_em_uso = f"gemini-2.0-flash (key {idx + 1})"
+            return resposta.text
+        except Exception as e:
+            print(f"⚠️ gemini-2.0-flash key {idx + 1} falhou: {e}")
 
     # 3. Gemini 2.0 Flash Lite
-    try:
-        config = types.GenerateContentConfig(system_instruction=instrucao)
-        resposta = await asyncio.to_thread(
-            client.models.generate_content,
-            model='gemini-2.0-flash-lite',
-            contents=conteudo_chat,
-            config=config
-        )
-        ia_em_uso = "gemini-2.0-flash-lite"
-        return resposta.text
-    except Exception as e:
-        print(f"⚠️ gemini-2.0-flash-lite falhou: {e}")
+    for idx, gc in enumerate(gemini_clients):
+        try:
+            config = types.GenerateContentConfig(system_instruction=instrucao)
+            resposta = await asyncio.to_thread(
+                gc.models.generate_content,
+                model='gemini-2.0-flash-lite',
+                contents=conteudo_chat,
+                config=config
+            )
+            ia_em_uso = f"gemini-2.0-flash-lite (key {idx + 1})"
+            return resposta.text
+        except Exception as e:
+            print(f"⚠️ gemini-2.0-flash-lite key {idx + 1} falhou: {e}")
 
     messages_provider = [{"role": "system", "content": instrucao}] + converter_historico_para_texto(conteudo_chat)
 
