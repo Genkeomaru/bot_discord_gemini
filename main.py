@@ -114,8 +114,8 @@ SUAS DIRETRIZES:
 }
 
 personalidade_atual = "cyberpunk"
-ia_em_uso = "nenhuma"
 processed_messages = set()
+ia_em_uso = "nenhuma"
 
 
 def converter_historico_para_texto(conteudo_chat: list) -> list:
@@ -446,6 +446,12 @@ async def on_message(message):
     if message.author.bot:
         return
 
+    if message.id in processed_messages:
+        return
+    processed_messages.add(message.id)
+    if len(processed_messages) > 1000:
+        processed_messages.clear()
+
     await bot.process_commands(message)
 
     if message.content.startswith(bot.command_prefix):
@@ -462,12 +468,6 @@ async def on_message(message):
             delete_after=10
         )
         return
-
-    if message.id in processed_messages:
-        return
-    processed_messages.add(message.id)
-    if len(processed_messages) > 1000:
-        processed_messages.clear()
 
     async with message.channel.typing():
         try:
