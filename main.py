@@ -500,28 +500,6 @@ async def slash_ajuda(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 
-# TEMPORÁRIO: comando de teste - remover depois
-@bot.tree.command(name="testar_aniversario", description="TESTE: envia a mensagem de aniversário do genkeomaru no #aniversario-teste")
-async def slash_testar_aniversario(interaction: discord.Interaction):
-    await interaction.response.defer(ephemeral=True)
-    guild = interaction.guild
-    canal = discord.utils.get(guild.text_channels, name="aniversario-teste")
-    if not canal:
-        await interaction.followup.send("❌ Canal #aniversario-teste não encontrado.", ephemeral=True)
-        return
-    membro = discord.utils.get(guild.members, name="genkeomaru")
-    mencao = membro.mention if membro else "@genkeomaru"
-    mensagem = (
-        f"🖤 **ALERTA DE SISTEMA** 🖤\n"
-        f"Meus sensores detectaram uma anomalia temporal positiva.\n"
-        f"Os registros confirmam: hoje é o dia em que {mencao} foi compilado(a) neste mundo.\n\n"
-        f"Que seus circuitos operem com máxima eficiência neste novo ciclo. "
-        f"**Feliz aniversário.** ⛓️💻🌃"
-    )
-    await canal.send(mensagem)
-    await interaction.followup.send("Mensagem de teste enviada!", ephemeral=True)
-
-
 @bot.event
 async def on_message(message):
     if message.author.bot:
