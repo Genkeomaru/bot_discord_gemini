@@ -306,7 +306,7 @@ async def on_ready():
 async def verificar_aniversarios():
     hoje = datetime.date.today()
     for guild in bot.guilds:
-        canal = discord.utils.get(guild.text_channels, name="chat")
+        canal = discord.utils.get(guild.text_channels, name="aniversario-teste")
         if not canal:
             continue
         for username, (dia, mes) in ANIVERSARIOS.items():
