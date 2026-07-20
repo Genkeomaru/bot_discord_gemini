@@ -3,6 +3,9 @@ import discord
 import os
 from dotenv import load_dotenv
 from discord.ext import commands
+from discord.ext import tasks
+import zoneinfo
+import datetime
 from discord import app_commands
 from google import genai
 from google.genai import types
@@ -51,6 +54,7 @@ if SUPABASE_URL and SUPABASE_KEY:
 intents = discord.Intents.default()
 intents.messages = True
 intents.message_content = True
+intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
@@ -118,6 +122,26 @@ SUAS DIRETRIZES:
 
 personalidade_atual = "cyberpunk"
 processed_messages = set()
+ANIVERSARIOS = {
+    "a_palmeirense":  (7,  1),
+    "bbyend":         (19, 1),
+    "mylittlepolly":  (31, 1),
+    "saved_01":       (7,  2),
+    "whokilledmaggie":(8,  2),
+    "believemystica": (13, 2),
+    "kibex22":        (22, 2),
+    "corvopestilento":(31, 3),
+    "ayxa0654":       (28, 5),
+    "notcrazynho":    (5,  6),
+    "pudindo":        (8,  7),
+    "eduutolentino":  (22, 7),
+    "genkeomaru":     (3,  9),
+    "malloti":        (26, 9),
+    "snipssw":        (20, 10),
+    "dwborx":         (28, 10),
+    "cairosz":        (22, 11),
+    "colorado.":      (25, 11),
+}
 ia_em_uso = "nenhuma"
 
 
@@ -274,7 +298,33 @@ async def buscar_historico_canal(canal, bot_id, limit=6):
 @bot.event
 async def on_ready():
     await bot.tree.sync()
+    verificar_aniversarios.start()
     print(f"O {bot.user.name} está online, com a Dívida Técnica paga e motor novo!")
+
+
+@tasks.loop(time=datetime.time(hour=9, minute=0, tzinfo=zoneinfo.ZoneInfo("America/Sao_Paulo")))
+async def verificar_aniversarios():
+    hoje = datetime.date.today()
+    for guild in bot.guilds:
+        canal = discord.utils.get(guild.text_channels, name="chat")
+        if not canal:
+            continue
+        for username, (dia, mes) in ANIVERSARIOS.items():
+            if hoje.day == dia and hoje.month == mes:
+                membro = discord.utils.get(guild.members, name=username)
+                mencao = membro.mention if membro else f"@{username}"
+                mensagem = (
+                    f"🖤 **ALERTA DE SISTEMA** 🖤\n"
+                    f"Meus sensores detectaram uma anomalia temporal positiva.\n"
+                    f"Os registros confirmam: hoje é o dia em que {mencao} foi compilado(a) neste mundo.\n\n"
+                    f"Que seus circuitos operem com máxima eficiência neste novo ciclo. "
+                    f"**Feliz aniversário.** ⛓️💻🌃"
+                )
+                await canal.send(mensagem)
+
+@verificar_aniversarios.before_loop
+async def before_verificar():
+    await bot.wait_until_ready()
 
 
 @bot.command()
